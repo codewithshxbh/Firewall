@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Web Management Console</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e5edee;
+            margin: 0;
+            padding: 0;
+        }
+
+        #logo{
+            max-width: 50px;
+            max-height: 50px;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+        .header {
+            background-color: rgb(255, 255, 255);
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+        .logo-title {
+            display: flex;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .header img {
+            margin-right: 10px;
+        }
+        .header a.button {
+            text-decoration: none;
+            background-color: #007BFF;
+            color: rgb(255, 255, 255);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            border-color: #f2f2f2;
+        }
+        .header a.button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .form-container { 
+        margin: 20px 0;
+        border-radius: 8px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0px 16px 16px 16px;
+        box-shadow:0px 4px 8px 0px rgba(0, 0, 0, 0.2)
+
+        }
+        .form-container form { border: 1px solid #ddd; padding: 20px; border:none }
+        .form-container input { margin: 10px 0; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; }
+        .form-container button { margin-top: 10px; }
+        .success-message { color: green; margin-top: 10px; }
+        .error-message { color: red; margin-top: 10px; }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .button {
+            margin: 10px 0;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .alerts, .graph,.policy-search, .policy-list,.policy, .logs, .anomaly{
+            margin-bottom: 16px;
+            border-radius: 8px;
+            background-color: white;
+            padding: 16px;
+            box-shadow: 0px 4px 8px 0px rgba(0, 0, 0, 0.2);
+        }
+        .alerts p{
+        color: #fd1e00;
+        }
+    
+        .policy-search .button{background-color: rgb(135, 207, 135);}
+
+        .policy form, .policy-search form{border: 1px solid #ddd; padding: 20px; border:none }
+        .policy input, .policy-search input{ margin: 10px 0; padding: 10px; width: 100%; border: 1px solid #ddd; border-radius: 5px; }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-title">
+            <img id="logo" src="{{ url_for('static', filename='logo.png') }}" alt="LOGO">
+            <h1>Admin Console</h1>
+        </div>
+        <a href="{{ url_for('logout') }}" class="button">Logout</a>
+    </div>
+    <div class="container">
+        <!-- Registration Form -->
+        <div class="form-container" style="background-color: rgb(255, 255, 255);">
+        <form id="registrationForm" method="POST" action="{{ url_for('register') }}">
+        <h1>New User Register</h1>
+        <div class="input-container">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="input-container">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div class="input-container">
+            <label for="confirm_password">Confirm Password:</label>
+            <input type="password" id="confirm_password" name="confirm_password" required>
+        </div>
+        <button type="submit" class="button">Register</button>
+        <div class="success-message">{{ success_message }}</div>
+        <div class="error-message">{{ error_message }}</div>
+         </form>
+        </div>
+
+        <div class="alerts" style="background-color: rgb(255, 255, 255);">
+        <h1>Recent Alerts</h1>
+        <p>Anomalies detected at 14:30 UTC</p>
+        </div>
+
+        <div class="graph" style="background-color: rgb(255, 255, 255);">
+        <h1>Anomaly Graph</h1>
+        <canvas id="alertChart"></canvas>
+        </div>
+
+        <!-- Policy Management -->
+        <div class="policy" style="background-color: rgb(255, 255, 255);">
+        <h2>Manage General Policies</h2>
+        <form id="policyForm" method="POST" action="{{ url_for('add_policy') }}">
+        <label for="application_name">Application Name:</label>
+        <input type="text" id="application_name" name="application_name" required><br><br>
+        <label for="domains">Domains (comma-separated):</label>
+        <input type="text" id="domains" name="domains" required><br><br>
+        <label for="ip_addresses">IP Addresses (comma-separated):</label>
+        <input type="text" id="ip_addresses" name="ip_addresses" required><br><br>
+        <label for="protocols">Protocols (comma-separated):</label>
+        <input type="text" id="protocols" name="protocols" required><br><br>
+        <button type="submit" class="button">Add Policy</button>
+        </form>
+        </div>
+
+        <!--Saerch Policy-->
+        <div class="policy-search" style="background-color: rgb(255, 255, 255);">
+        <h2>Search Policy</h2>
+        <form id="searchPolicy" method="POST" action="{{ url_for('add_policy') }}">
+        <input type="text" id="search" placeholder="Search Policies">
+        <button type="button" class="button" onclick="searchPolicies()">Search</button> 
+        </form>
+        </div>
+        <!-- Policies List -->
+        <div class="policy-list">
+            <h2>General Policies</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Application Name</th>
+                        <th>Domains</th>
+                        <th>IP Addresses</th>
+                        <th>Protocols</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for policy in policies %}
+                    <tr>
+                        <td>{{ policy.application_name }}</td>
+                        <td>{{ policy.domains }}</td>
+                        <td>{{ policy.ip_addresses }}</td>
+                        <td>{{ policy.protocols }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Logs List -->
+        <div class="logs">
+            <h2>General Logs</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source IP</th>
+                        <th>Destination IP</th>
+                        <th>Protocol</th>
+                        <th>Application Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.source_ip }}</td>
+                        <td>{{ log.destination_ip }}</td>
+                        <td>{{ log.protocol }}</td>
+                        <td>{{ log.application_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Anomalies List -->
+        <div class="anomaly">
+            <h2>General Anomalies</h2>
+            <div id="anomalies">
+                <p>Loading anomalies...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for fetching anomalies -->
+    <script>
+        fetch('/anomalies')
+            .then(response => response.json())
+            .then(data => {
+                const anomaliesDiv = document.getElementById('anomalies');
+                anomaliesDiv.innerHTML = `<p>${data.anomalies}</p>`;
+            })
+            .catch(error => {
+                console.error('Error fetching anomalies:', error);
+            });
+    </script>
+</body>
+</html>
